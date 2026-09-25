@@ -63,6 +63,12 @@ public final class FastPing {
             );
     public static boolean DEBUG = false;
 
+    /**
+     * Set once on {@code CLIENT_STOPPING}. Checked by the retry loop so it stops
+     * issuing new ping attempts instead of racing the event loop's shutdown.
+     */
+    public static volatile boolean shuttingDown = false;
+
     private static void log(String s) {
         if (DEBUG) System.out.println("[FastPing] " + s);
     }
@@ -76,7 +82,7 @@ public final class FastPing {
         var resolved = SrvResolver.resolve(host, port);
         log("Resolved " + host + ":" + port + " -> " + resolved.host() + ":" + resolved.port());
 
-        if (GROUP.isShutdown()) {
+        if (shuttingDown || GROUP.isShutdown()) {
             log("Called ping after group shutdown.");
             return CompletableFuture.failedFuture(new IllegalStateException("EventLoopGroup has been shut down"));
         }
