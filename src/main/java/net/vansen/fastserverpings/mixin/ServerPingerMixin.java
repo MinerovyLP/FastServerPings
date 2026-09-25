@@ -79,13 +79,6 @@ public abstract class ServerPingerMixin {
                 CompletableFuture.supplyAsync(() -> {
                     Throwable last = null;
                     for (int i = 0; i < attempts; i++) {
-                        if (FastPing.shuttingDown) {
-                            // Client is quitting; don't burn more retry attempts (and
-                            // their connect/ping timeouts) submitting fresh work to an
-                            // event loop group that's already being torn down.
-                            throw new CompletionException(
-                                    last != null ? last : new IllegalStateException("Client is shutting down"));
-                        }
                         try {
                             return FastPing.ping(host, port, listener).join();
                         } catch (Throwable t) {
